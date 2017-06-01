@@ -147,9 +147,9 @@ class RovioNode_noros{
       : argc_(argc),argv_(argv),mpFilter_(mpFilter), transformFeatureOutputCT_(&mpFilter->multiCamera_), landmarkOutputImuCT_(&mpFilter->multiCamera_),
         cameraOutputCov_((int)(mtOutput::D_),(int)(mtOutput::D_)), featureOutputCov_((int)(FeatureOutput::D_),(int)(FeatureOutput::D_)), landmarkOutputCov_(3,3),
         featureOutputReadableCov_((int)(FeatureOutputReadable::D_),(int)(FeatureOutputReadable::D_)){
-    #ifndef NDEBUG
-      ROS_WARN("====================== Debug Mode ======================");
-    #endif
+//     #ifndef NDEBUG
+//       ROS_WARN("====================== Debug Mode ======================");
+//     #endif
     mpImgUpdate_ = &std::get<0>(mpFilter_->mUpdates_);
     mpPoseUpdate_ = &std::get<1>(mpFilter_->mUpdates_);
     forceOdometryPublishing_ = false;
@@ -305,90 +305,93 @@ class RovioNode_noros{
   }
   
   
-  void Loop()
-  {
-       
-      std::string datasetBase = std::string(argv_[1]);
-      
-  
-      
-      std::string imgBasePath = datasetBase + "cam0/data/";
-      std::string strTimeStampFile = datasetBase + "cam0/data.txt";
-      std::string strImuFile = datasetBase + "imu0/data.txt";
-      std::string strGroundTruthFile = datasetBase + "state_groundtruth_estimate0/data.txt";
-      std::ifstream timestampfile(strTimeStampFile);
-      std::vector<ImageNameStruct> imageList = getImageList(timestampfile);
-      timestampfile.close();
-      
-     
-      
-      std::ifstream imuFile(strImuFile);
-      std::vector<StampedIMUData> imuList;
-      imuList = getIMUReadingEuroc(imuFile);
-      imuFile.close();
-      //std::cout<<imuList.at(0).imudata.a<<std::endl;
-      
-      
-      // groundtruth
-      std::ifstream groundTruthFile(strGroundTruthFile);
-      std::vector<IMUGroundTruth> groundTruthList;
-      groundTruthList = getGroundTruthEuroc(groundTruthFile);
-      groundTruthFile.close();
-      std::cout<<groundTruthList.size()<<std::endl;
-      
-      unsigned int imageStart ;
-      unsigned int imageEnd ;
-      
-      std::string s = std::string(argv_[2]);
-      std::stringstream ss;
-      ss<<s;
-      ss>>imageStart;
-      
-      std::string s1 = std::string(argv_[3]);
-      std::stringstream ss1;
-      ss1<<s1; 
-      ss1>>imageEnd;
-      
-     
-      
+void Loop()
+{
+	std::string datasetBase = std::string(argv_[1]);
+	std::string imgBasePath = datasetBase + "cam0/data/";
+	std::string strTimeStampFile = datasetBase + "cam0/data.csv";
+	std::string strImuFile = datasetBase + "imu0/data.csv";
+	std::string strGroundTruthFile = datasetBase + "state_groundtruth_estimate0/data.csv";
 	
-      double image_t =  imageList.at(imageStart).imageTimeStamp;
-      unsigned int imuStart= 0;	
-      unsigned int groundTruthStart = 0;
+	// image
+	std::ifstream timestampfile(strTimeStampFile);
+	if(timestampfile.is_open())
+		printf("open strTimeStampFile: %s success!!!\n", strTimeStampFile.c_str());
+	else
+		printf("open strTimeStampFile: %s filed!!!\n", strTimeStampFile.c_str());
+	
+	std::vector<ImageNameStruct> imageList = getImageList(timestampfile);
+	timestampfile.close();
+	
+	// read imu 
+	std::ifstream imuFile(strImuFile);
+	if(imuFile.is_open())
+		printf("open strImuFile: %s success!!!\n", strImuFile.c_str());
+	else
+		printf("open strImuFile: %s filed!!!\n", strImuFile.c_str());
+	
+	std::vector<StampedIMUData> imuList;
+	imuList = getIMUReadingEuroc(imuFile);
+	imuFile.close();
+	
+	// groundtruth
+	std::ifstream groundTruthFile(strGroundTruthFile);
+	if(groundTruthFile.is_open())
+		printf("open strGroundTruthFile: %s success!!!\n", strGroundTruthFile.c_str());
+	else
+		printf("open strGroundTruthFile: %s filed!!!\n", strGroundTruthFile.c_str());
+	
+	std::vector<IMUGroundTruth> groundTruthList;
+	groundTruthList = getGroundTruthEuroc(groundTruthFile);
+	groundTruthFile.close();
+	std::cout<<groundTruthList.size()<<std::endl;
+	
+	// set image start & end
+	unsigned int imageStart ;
+	unsigned int imageEnd ;
+	std::string s = std::string(argv_[2]);
+	std::stringstream ss;
+	ss<<s;
+	ss>>imageStart;
+	
+	std::string s1 = std::string(argv_[3]);
+	std::stringstream ss1;
+	ss1<<s1; 
+	ss1>>imageEnd;
 
-      for (size_t i = 0; i < imuList.size() && imuList.at(i).timestamp < image_t; i++)
+	double image_t =  imageList.at(imageStart).imageTimeStamp;
+	unsigned int imuStart= 0;	
+	unsigned int groundTruthStart = 0;
+
+	for (size_t i = 0; i < imuList.size() && imuList.at(i).timestamp < image_t; i++)
 	imuStart = i;
-    
-		   
-      std::cout<<"imuStart: "<<imuStart<<std::endl;
-      std::cout<<"groundTruthStart: "<<groundTruthStart<<std::endl;
-      
-      unsigned int imuCnt  = imuStart;
-      unsigned int groundTruthCnt = groundTruthStart;
-      for (unsigned int imageCnt = imageStart+1; imageCnt < imageEnd; imageCnt ++)
-      {
-	while( groundTruthList.at(groundTruthCnt).timeStamp < imageList.at(imageCnt).imageTimeStamp )
-	    groundTruthCnt ++;
-	
-	
-	
-	
-	while(imuList.at(imuCnt).timestamp < imageList.at(imageCnt).imageTimeStamp)
-	{
-	 
-	  imuCallback(imuList.at(imuCnt));
-	 
-	  imuCnt ++;
-	  cv::waitKey(3);
-	}
-	
-	std::string  imageName = imgBasePath + imageList.at(imageCnt).imageName;
-	double t = imageList.at(imageCnt).imageTimeStamp;
-	cv::Mat image = cv::imread(imageName,CV_LOAD_IMAGE_GRAYSCALE);
-	imgCallback0(image,t);
 
-      }
-  }
+	std::cout<<"imageStart: "<<imageEnd<<", imageEnd: "<<imageEnd<<std::endl;   
+	std::cout<<"imuStart: "<<imuStart<<std::endl;
+	std::cout<<"groundTruthStart: "<<groundTruthStart<<std::endl;
+	
+	unsigned int imuCnt  = imuStart;
+	unsigned int groundTruthCnt = groundTruthStart;
+	for (unsigned int imageCnt = imageStart+1; imageCnt < imageEnd; imageCnt ++){
+		std::cout<<"imageCnt: "<<imageCnt<<std::endl; 
+		
+		while( groundTruthList.at(groundTruthCnt).timeStamp < imageList.at(imageCnt).imageTimeStamp )
+			groundTruthCnt ++;
+		
+		while(imuList.at(imuCnt).timestamp < imageList.at(imageCnt).imageTimeStamp){
+			imuCallback(imuList.at(imuCnt));
+			imuCnt ++;
+			cv::waitKey(3);
+		}
+		
+		std::string  imageName = imgBasePath + imageList.at(imageCnt).imageName;
+		double t = imageList.at(imageCnt).imageTimeStamp;
+		cv::Mat image = cv::imread(imageName,CV_LOAD_IMAGE_GRAYSCALE);
+		imgCallback0(image,t);
+	}
+}
+  
+  
 };
 
 }

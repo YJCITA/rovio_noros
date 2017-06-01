@@ -9,87 +9,37 @@
 
 
 void getParameter(std::string cameParam,std::string imuParam,cameraParameters & camParam,	noiseParameters & initNoiseParam)
-
 {
-
-
-
 	cv::FileStorage fs(cameParam,cv::FileStorage::READ);
-
-
-
 	cv::Mat T_BS, intrinsics, distortion_coefficients,resolution;
-
 	fs["T_BS"] >> T_BS;
 
 	//std::cout<<T_BS<<std::endl;
-
 	Eigen::Matrix3d R_B_C;
-
 	R_B_C<< T_BS.at<double>(0,0),T_BS.at<double>(0,1),T_BS.at<double>(0,2),
-
 		T_BS.at<double>(1,0),T_BS.at<double>(1,1),T_BS.at<double>(1,2),
-
 		T_BS.at<double>(2,0),T_BS.at<double>(2,1),T_BS.at<double>(2,2);
 
 	camParam.R_C_B = R_B_C.transpose();
-
-
-
 	camParam.Bp_c0 <<T_BS.at<double>(0,3),T_BS.at<double>(1,3),T_BS.at<double>(2,3);
 
-
-
-
-
-
-
 	fs["intrinsics"] >> intrinsics;
-
 	std::cout<<intrinsics<<std::endl;
-
 	camParam.f_u = intrinsics.at<double>(0);
-
 	camParam.f_v = intrinsics.at<double>(1);
-
 	camParam.c_u = intrinsics.at<double>(2);
-
 	camParam.c_v = intrinsics.at<double>(3);
 
-	
-
-
-
-
-
 	fs["distortion_coefficients"] >> distortion_coefficients;
-
 	std::cout<<distortion_coefficients<<std::endl;
-
 	camParam.distortCoeff = distortion_coefficients;
-
-
-
 	fs["resolution"] >> resolution;
-
 	std::cout<<resolution<<std::endl;
-
 	camParam.width = 752;
-
 	camParam.height = 480;
-
-	
-
-
-
-
-
 	cv::FileStorage fs1(imuParam,cv::FileStorage::READ);
 
 	Eigen::Vector3d I(1,1,1);
-
-	
-
 	double gyroscope_noise_density;
 
 	fs1["gyroscope_noise_density"] >> gyroscope_noise_density;
@@ -97,9 +47,6 @@ void getParameter(std::string cameParam,std::string imuParam,cameraParameters & 
 	std::cout<<gyroscope_noise_density<<std::endl; 
 
 	initNoiseParam.var_gc = gyroscope_noise_density*gyroscope_noise_density*I;
-
-
-
 	double gyroscope_random_walk;
 
 	fs1["gyroscope_random_walk"] >> gyroscope_random_walk;
@@ -107,9 +54,6 @@ void getParameter(std::string cameParam,std::string imuParam,cameraParameters & 
 	std::cout<<gyroscope_random_walk<<std::endl; 
 
 	initNoiseParam.var_wgc = gyroscope_random_walk*gyroscope_random_walk*I;
-
-
-
 	double accelerometer_noise_density;
 
 	fs1["accelerometer_noise_density"] >> accelerometer_noise_density;
@@ -117,121 +61,77 @@ void getParameter(std::string cameParam,std::string imuParam,cameraParameters & 
 	std::cout<<accelerometer_noise_density<<std::endl; 
 
 	initNoiseParam.var_ac = accelerometer_noise_density*accelerometer_noise_density*I;
-
-
-
 	double accelerometer_random_walk;
 
 	fs1["accelerometer_random_walk"] >> accelerometer_random_walk;
 
 	initNoiseParam.var_wac = accelerometer_random_walk*accelerometer_random_walk*I;
-
-
-
-
-
 	initNoiseParam.u_var_prime = (8/camParam.f_u)*(8/camParam.f_u);
-
 	initNoiseParam.v_var_prime = initNoiseParam.u_var_prime;
-
-
-
 }
 
 
-
-
-
 std::vector<ImageNameStruct> getImageList( std::ifstream& imageListFile)
-
 {
-
 	std::string filename;
-
 	std::string line;
-
 	std::string timestamp;
-
 	double time;
-
+	int image_counter = 0;
 	std::vector<ImageNameStruct> imageNameList;
-
-	while(std::getline(imageListFile,line)&& !line.empty())
-
-	{
-
-
-
+	
+	if(std::getline(imageListFile,line)){
+		std::cout<<"line: "<<line<<std::endl;
+		printf("imageListFile is ok!!!\n");
+	}else
+		printf("imageListFile is empty!!!\n");
+	
+	while(std::getline(imageListFile,line)){
+		if(line.empty()){
+			printf("imageListFile is voer !!!!\n");
+			break;
+		}
+		
 		std::istringstream iss(line);
-
-
-
 		iss >> timestamp >> filename;
-
 		time = std::stod(timestamp);
 
-		//std::cout<<filename<<" "<<time<<std::endl;
-
+// 		printf("read image, timestamp: %s, filename: %s \n", timestamp.c_str(), filename.c_str());
 		time = time * 1e-9;
-
-
-
 		ImageNameStruct imageNameStruct;
-
 		imageNameStruct.imageName = filename;
-
 		imageNameStruct.imageTimeStamp = time;
-
 		imageNameList.push_back(imageNameStruct);
-
-			
-
-	
-
+		
+		image_counter++;
 	}
-
+	
+	printf("image_counter: %d \n", image_counter);
 	return imageNameList;
-
 }
 
 
 
 std::vector<ImageNameStruct> getImageListDvt( std::ifstream& imageListFile)
-
 {
 
 	std::string filename;
-
 	std::string line;
-
 	std::string timestamp;
-
 	double time;
-
 	std::vector<ImageNameStruct> imageNameList;
 
 	while(std::getline(imageListFile,line)&& !line.empty())
-
 	{
-        	std::istringstream iss(line);
+        std::istringstream iss(line);
 		iss >> filename >> timestamp;
-
 		//std::cout<< timestamp<<" "<<filename<<std::endl;
-
-
-
 		time = std::stod(timestamp);
-
 		time = time * 1e-6; // [s]
-
 		ImageNameStruct imageNameStruct;
-
 		imageNameStruct.imageName = filename;
-
 		imageNameStruct.imageTimeStamp = time;
-
 		imageNameList.push_back(imageNameStruct);
-
 	}
 
 	return imageNameList;
@@ -241,10 +141,7 @@ std::vector<ImageNameStruct> getImageListDvt( std::ifstream& imageListFile)
 
 
 std::vector<StampedIMUData> getIMUReading(std::ifstream& IMURecordFile)
-
 {
-
-
 	std::string gx;
 	std::string gy;
 	std::string gz;
@@ -254,52 +151,36 @@ std::vector<StampedIMUData> getIMUReading(std::ifstream& IMURecordFile)
 	std::string line;
 
 	std::string timestamp;
-
 	std::vector<StampedIMUData> imuReadingList;
-
 	while(std::getline(IMURecordFile,line)&& !line.empty())
-
 	{
-
 		std::istringstream iss(line); 
 		iss>>timestamp>>ax>>ay>>az>>gx>>gy>>gz;
-
 		double time = std::stod(timestamp);
-
 		time = time * 1e-9;
 
 		//std::cout<<"IMU timestamp: "<<time<<std::endl;
-
-
-
 		StampedIMUData imuReadingStruct;
-
 		imuReadingStruct.timestamp= time;
-
 		imuReadingStruct.imudata.a<<stod(ax),stod(ay),stod(az);
-
 		imuReadingStruct.imudata.g<<stod(gx),stod(gy),stod(gz);
-
 		imuReadingList.push_back(imuReadingStruct);
-
 	}
 
 	return imuReadingList;
-
-
-
 }
 
 std::vector<StampedIMUData> getIMUReadingEuroc(std::ifstream& IMURecordFile)
-
 {
       std::vector<StampedIMUData> imuList;
       std::string  line;
       double timeStamp;
       IMUdata data;
-      while (std::getline(IMURecordFile, line))
-
-      {  
+	  
+	  if(!std::getline(IMURecordFile,line))
+		  printf("getline IMURecordFile is empty!!!!\n");
+		  
+      while (std::getline(IMURecordFile, line)){  
 	      StampedIMUData tmp;
 	      std::sscanf(line.c_str(), "%lf,%lf,%lf,%lf,%lf,%lf,%lf", &timeStamp, 
 		    &data.g.x(), &data.g.y(), &data.g.z(),
@@ -307,108 +188,54 @@ std::vector<StampedIMUData> getIMUReadingEuroc(std::ifstream& IMURecordFile)
 	      tmp.timestamp = timeStamp * 1e-9;
 	      tmp.imudata = data;
 	      imuList.push_back(tmp);
-
+		  
+// 		  printf("imu data: %lf,%lf,%lf,%lf,%lf,%lf,%lf\n", timeStamp,  data.g.x(), data.g.y(), data.g.z(),
+// 		   data.a.x(), data.a.y(), data.a.z());
       }
       
       return imuList;
-      
 }
 
 
 
-
 std::vector<StampedIMUData> getIMUReadingDvt(std::ifstream& IMURecordFile)
-
 {
-
-
-
-	
-
 	std::string gx;
-
 	std::string gy;
-
 	std::string gz;
-
 	std::string ax;
-
 	std::string ay;
-
 	std::string az;
-
-
-
 	std::string line;
-
 	std::string timestamp;
-
 	std::vector<StampedIMUData> imuReadingList;
-
 	while(std::getline(IMURecordFile,line)&& !line.empty())
-
 	{
-
 		std::istringstream iss(line); 
-
-                std::getline(iss, timestamp, ',');
-
-		
-
+        std::getline(iss, timestamp, ',');
 		double time = std::stod(timestamp);
-
 		time = time* 1e-6;
-
 		StampedIMUData imuReadingStruct;
-
 		imuReadingStruct.timestamp= time;
-
-		
-
 		std::string s;
-
         for (int j = 0; j < 3; ++j) {
-
           std::getline(iss, s, ',');
-
           imuReadingStruct.imudata.a[j] = std::stof(s);
-
         }
-
-
-
+        
 		 for (int j = 0; j < 3; ++j) {
-
           std::getline(iss, s, ',');
-
           imuReadingStruct.imudata.g[j] = std::stof(s);
 
         }
 
-
-
-        /*
-
-		std::cout<< timestamp<<" "<<imuReadingStruct.imudata.a[0]<< " "<<imuReadingStruct.imudata.a[1]<<" "<<imuReadingStruct.imudata.a[2]
-
-		<< imuReadingStruct.imudata.g[0]<< " "<<imuReadingStruct.imudata.g[1]<<" "<<imuReadingStruct.imudata.g[2]<<std::endl;
-
-		*/
-
-
+// 		std::cout<< timestamp<<" "<<imuReadingStruct.imudata.a[0]<< " "<<imuReadingStruct.imudata.a[1]<<" "<<imuReadingStruct.imudata.a[2]
+// 		<< imuReadingStruct.imudata.g[0]<< " "<<imuReadingStruct.imudata.g[1]<<" "<<imuReadingStruct.imudata.g[2]<<std::endl;
 
 		imuReadingList.push_back(imuReadingStruct);
 
-			
-
-	
-
 	}
-
 	return imuReadingList;
-
-
-
 }
 
 
@@ -418,7 +245,6 @@ std::vector<StampedIMUData> getIMUReadingDvt(std::ifstream& IMURecordFile)
 
 
 std::vector<StampedAccData> getAccReading(std::ifstream & AccRecordFile)
-
 {
 
 	std::string ax;
@@ -560,27 +386,38 @@ std::vector<IMUGroundTruth> getGroundTruthEuroc(std::ifstream & groundTruthFile)
   std::vector<IMUGroundTruth> GroundTruth;
   IMUGroundTruth imuGroudTruth;
   double ts;
+	 int ground_truth_counter = 0;
+  if(std::getline(groundTruthFile,line)){
+		printf("groundTruthFile is ok!!!\n");
+	}else
+		printf("groundTruthFile is empty!!!\n");
+	  
   while(std::getline(groundTruthFile, line))
-
   {
-
     std::sscanf(line.c_str(), "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf", 
-
 	    &ts, &imuGroudTruth.p_b_G.x(), &imuGroudTruth.p_b_G.y(), &imuGroudTruth.p_b_G.z(),
-
 	    &imuGroudTruth.q_B_G(3), &imuGroudTruth.q_B_G(0),&imuGroudTruth.q_B_G(1), &imuGroudTruth.q_B_G(2),
-
 	    &imuGroudTruth.v_b_G.x(), &imuGroudTruth.v_b_G.y(), &imuGroudTruth.v_b_G.z(),
-
 	    &imuGroudTruth.bias_w(0), &imuGroudTruth.bias_w(1), &imuGroudTruth.bias_w(2),
-
 	    &imuGroudTruth.bias_a(0), &imuGroudTruth.bias_a(1), &imuGroudTruth.bias_a(2));
+	
+// 		std::istringstream iss(line);
+// 		iss >> ts >> imuGroudTruth.p_b_G.x() >> imuGroudTruth.p_b_G.y() >> imuGroudTruth.p_b_G.z() >> 
+// 	    imuGroudTruth.q_B_G(3) >> imuGroudTruth.q_B_G(0) >> imuGroudTruth.q_B_G(1) >> imuGroudTruth.q_B_G(2) >> 
+// 	    imuGroudTruth.v_b_G.x() >> imuGroudTruth.v_b_G.y() >> imuGroudTruth.v_b_G.z() >> 
+// 	    imuGroudTruth.bias_w(0) >> imuGroudTruth.bias_w(1) >> imuGroudTruth.bias_w(2) >> 
+// 	    imuGroudTruth.bias_a(0) >> imuGroudTruth.bias_a(1) >> imuGroudTruth.bias_a(2);
+		
+// 		std::cout<<"line: "<<line<<std::endl;
+// 		printf("read imuGroudTruth, ts: %f\n", ts);
 
     imuGroudTruth.timeStamp = ts * 1e-9;
-
     GroundTruth.push_back(imuGroudTruth);
+	
+	ground_truth_counter ++;
 
   }
+  printf("ground_truth_counter: %d \n", ground_truth_counter);
   return GroundTruth;
 
 }

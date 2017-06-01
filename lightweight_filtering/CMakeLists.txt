@@ -3,7 +3,6 @@ project(lightweight_filtering)
 add_definitions(-std=c++11)
 
 ##################### Find, include, and compile library #####################
-
 # Attempt to find catkinized kindr
 find_package(kindr QUIET)
 if(NOT kindr_FOUND)
@@ -12,15 +11,12 @@ if(NOT kindr_FOUND)
   pkg_check_modules(kindr kindr REQUIRED)
 endif()
 
-
-
-find_package(Eigen3 REQUIRED)
+#find_package(Eigen3 REQUIRED)
+include(/home/yj/bak/packet/eigen3/script_eigen.cmake REQUIRED)  
 
 include_directories(${kindr_INCLUDE_DIRS})
 include_directories(${EIGEN3_INCLUDE_DIR})
 include_directories(include)
-
-
 
 if(DEFINED CATKIN_DEVEL_PREFIX)
   find_package(catkin REQUIRED)

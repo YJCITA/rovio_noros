@@ -83,10 +83,6 @@ void idleFunc(){
 #endif
 
 int main(int argc, char** argv){
-  
-  
- 
-
   std::string filter_config = "./cfg/rovio.info";
   // Filter
   std::shared_ptr<mtFilter> mpFilter(new mtFilter);
@@ -98,7 +94,7 @@ int main(int argc, char** argv){
   
   rovio::RovioNode_noros<mtFilter> rovioNode(argc,argv,mpFilter);
   
-  #ifdef MAKE_SCENE
+ #ifdef MAKE_SCENE
   // Scene
   std::string mVSFileName = "./shaders/shader.vs";
   std::string mFSFileName = "./shaders/shader.fs";

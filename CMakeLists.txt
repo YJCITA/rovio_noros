@@ -1,6 +1,17 @@
 cmake_minimum_required (VERSION 2.6)
 project(rovio)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -march=native")
+
+OPTION(COMPILE_DEBUG_SWITCH "switch for copmile debug OR release" OFF)
+IF (COMPILE_DEBUG_SWITCH)
+    MESSAGE(STATUS "copmile debug")
+    SET(CMAKE_BUILD_TYPE "Debug")
+#     SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+ELSE()
+    MESSAGE(STATUS "copmile release")
+ENDIF()
+
 set(ROVIO_NMAXFEATURE 25 CACHE STRING "Number of features for ROVIO")
 set(ROVIO_NCAM 1 CACHE STRING "Number of enabled cameras")
 set(ROVIO_NLEVELS 4 CACHE STRING "Number of image leavels for the features")
@@ -14,7 +25,6 @@ add_definitions(-DROVIO_NPOSE=${ROVIO_NPOSE})
 
 add_subdirectory(lightweight_filtering)
 
-set(CMAKE_BUILD_TYPE "Release")
 set(MAKE_SCENE TRUE)
 #Add custom (non compiling) targets so launch scripts and python files show up in QT Creator's project view.
 file(GLOB_RECURSE EXTRA_FILES */*)
@@ -29,16 +39,18 @@ if(0)
 endif()
 
 
-find_package(Eigen3 REQUIRED)
+#find_package(Eigen3 REQUIRED)
+include(/home/yj/bak/packet/eigen3/script_eigen.cmake REQUIRED)  
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+SET(OpenCV_DIR "/home/yj/bak/packet/opencv/opencv3.1/install/share/OpenCV")
+MESSAGE(STATUS "set the new opencv library address: ${OpenCV_DIR}")
 FIND_PACKAGE(OpenCV REQUIRED)
 
 FIND_PACKAGE(Boost COMPONENTS filesystem system thread REQUIRED)
 
+SET(Pangolin_DIR "/home/yj/bak/packet/Pangolin/install/lib/cmake/Pangolin")
 find_package(Pangolin REQUIRED)
-
-
-
-
 
 if(MAKE_SCENE)
 	message(STATUS "Building ROVIO with openGL Scene Visualization")
@@ -69,8 +81,6 @@ else()
   pkg_check_modules(YamlCpp REQUIRED yaml-cpp>=0.5)
 endif()
 
-
-
 # Include dirs
 INCLUDE_DIRECTORIES(
   include
@@ -80,8 +90,6 @@ INCLUDE_DIRECTORIES(
   ${Pangolin_INCLUDE_DIRS}
   ${YamlCpp_INCLUDE_DIRS}
 )
-
-
 
 include_directories(include )
 
@@ -111,43 +119,42 @@ target_link_libraries(rovio_pipeline ${PROJECT_NAME})
 #add_executable(rovio_node src/rovio_node.cpp)
 #target_link_libraries(rovio_node ${PROJECT_NAME})
 
-
 #add_executable(rovio_rosbag_loader src/rovio_rosbag_loader.cpp)
 #target_link_libraries(rovio_rosbag_loader ${PROJECT_NAME})
 
 #add_executable(feature_tracker_node src/feature_tracker_node.cpp)
 #target_link_libraries(feature_tracker_node ${PROJECT_NAME})
 
-add_executable(test_pose_init test/test_pose_init.cpp)
-target_link_libraries(test_pose_init ${PROJECT_NAME})
+# add_executable(test_pose_init test/test_pose_init.cpp)
+# target_link_libraries(test_pose_init ${PROJECT_NAME})
 
-
-if(  EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gtest/")
-	message(STATUS "Building GTests!")
-	option(BUILD_GTEST "build gtest" ON)
-	#add_subdirectory(gtest gtest)
-	enable_testing()
-	include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
-	add_executable(test_patch src/test_patch.cpp src/Camera.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp)
-	target_link_libraries(test_patch gtest_main gtest pthread 
-        ${YamlCpp_LIBRARIES}
-	${OpenMP_EXE_LINKER_FLAGS} 
-	${OPENGL_LIBRARIES} 
-	${GLUT_LIBRARY} 
-	${GLEW_LIBRARY}
-	${OpenCV_LIBS}
-	${Boost_LIBRARIES}
-	${Pangolin_LIBRARIES})
-	add_test(test_patch test_patch)
-	add_executable(test_mlp src/test_mlp.cpp src/Camera.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp)
-	target_link_libraries(test_mlp gtest_main gtest pthread 
-        ${YamlCpp_LIBRARIES}
-	${OpenMP_EXE_LINKER_FLAGS} 
-	${OPENGL_LIBRARIES} 
-	${GLUT_LIBRARY} 
-	${GLEW_LIBRARY}
-	${OpenCV_LIBS}
-	${Boost_LIBRARIES}
-	${Pangolin_LIBRARIES})
-	add_test(test_mlp test_mlp)
-endif()
+# -YJ-
+# if( EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gtest/")
+# 	message(STATUS "Building GTests!")
+# 	option(BUILD_GTEST "build gtest" ON)
+# 	#add_subdirectory(gtest gtest)
+# 	enable_testing()
+# 	include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+# 	add_executable(test_patch src/test_patch.cpp src/Camera.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp)
+# 	target_link_libraries(test_patch gtest_main gtest pthread 
+#         ${YamlCpp_LIBRARIES}
+# 	${OpenMP_EXE_LINKER_FLAGS} 
+# 	${OPENGL_LIBRARIES} 
+# 	${GLUT_LIBRARY} 
+# 	${GLEW_LIBRARY}
+# 	${OpenCV_LIBS}
+# 	${Boost_LIBRARIES}
+# 	${Pangolin_LIBRARIES})
+# 	add_test(test_patch test_patch)
+# 	add_executable(test_mlp src/test_mlp.cpp src/Camera.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp)
+# 	target_link_libraries(test_mlp gtest_main gtest pthread 
+#         ${YamlCpp_LIBRARIES}
+# 	${OpenMP_EXE_LINKER_FLAGS} 
+# 	${OPENGL_LIBRARIES} 
+# 	${GLUT_LIBRARY} 
+# 	${GLEW_LIBRARY}
+# 	${OpenCV_LIBS}
+# 	${Boost_LIBRARIES}
+# 	${Pangolin_LIBRARIES})
+# 	add_test(test_mlp test_mlp)
+# endif()
