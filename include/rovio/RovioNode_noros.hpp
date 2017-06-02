@@ -384,17 +384,15 @@ void Loop()
 		}
 		
 		std::string  imageName = imgBasePath + imageList.at(imageCnt).imageName;
-		printf("cur imageName: %s", imageName.c_str() );
-// 		imageName = "/media/yj/Data4T/data/SLAM_Dataset/EuRoc/MH_01_easy/mav0/cam0/data/1403636579913555456.png";
 		double t = imageList.at(imageCnt).imageTimeStamp;
 		cv::Mat image = cv::imread(imageName.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
 		imgCallback0(image,t);
 		
-// 		cv::imshow("image", image);
-		//按键事件，空格暂停，其他跳出循环
-		int temp = cvWaitKey(1);
-		if (temp == 32)
-			while (cvWaitKey() == -1);
+// // 		cv::imshow("image", image);
+// 		//按键事件，空格暂停，其他跳出循环
+// 		int temp = cvWaitKey(1);
+// 		if (temp == 32)
+// 			while (cvWaitKey() == -1);
 	}
 }
   
