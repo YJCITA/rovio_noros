@@ -211,21 +211,21 @@ class RovioNode_noros{
    * @param img - Image message.
    * @todo generalize
    */
-  void imgCallback0( cv::Mat & img,double & t){
+  void imgCallback0( cv::Mat & img,double & t)
+  {
     std::lock_guard<std::mutex> lock(m_filter_);
     imgCallback(img,t);
   }
 
-  void imgCallback(cv::Mat & img,double & t){
- 
+  void imgCallback(cv::Mat & img,double & t)
+  {
     cv::Mat cv_img = img.clone();
-   
     if(init_state_.isInitialized() && !cv_img.empty()){
       double msgTime = t;
       if(msgTime != imgUpdateMeas_.template get<mtImgMeas::_aux>().imgTime_){
         for(int i=0;i<mtState::nCam_;i++){
           if(imgUpdateMeas_.template get<mtImgMeas::_aux>().isValidPyr_[i]){
-            std::cout << "    \033[31mFailed Synchronization of Camera Frames, t = " << msgTime << "\033[0m" << std::endl;
+            std::cout << "\033[31mFailed Synchronization of Camera Frames, t = " << msgTime << "\033[0m" << std::endl;
           }
         }
         imgUpdateMeas_.template get<mtImgMeas::_aux>().reset(msgTime);
@@ -344,7 +344,6 @@ void Loop()
 	std::vector<IMUGroundTruth> groundTruthList;
 	groundTruthList = getGroundTruthEuroc(groundTruthFile);
 	groundTruthFile.close();
-	std::cout<<groundTruthList.size()<<std::endl;
 	
 	// set image start & end
 	unsigned int imageStart ;
@@ -360,13 +359,13 @@ void Loop()
 	ss1>>imageEnd;
 
 	double image_t =  imageList.at(imageStart).imageTimeStamp;
-	unsigned int imuStart= 0;	
+	unsigned int imuStart = 0;
 	unsigned int groundTruthStart = 0;
 
 	for (size_t i = 0; i < imuList.size() && imuList.at(i).timestamp < image_t; i++)
-	imuStart = i;
+		imuStart = i;
 
-	std::cout<<"imageStart: "<<imageEnd<<", imageEnd: "<<imageEnd<<std::endl;   
+	std::cout<<"imageStart: "<<imageStart<<", imageEnd: "<<imageEnd<<std::endl;   
 	std::cout<<"imuStart: "<<imuStart<<std::endl;
 	std::cout<<"groundTruthStart: "<<groundTruthStart<<std::endl;
 	
@@ -385,9 +384,17 @@ void Loop()
 		}
 		
 		std::string  imageName = imgBasePath + imageList.at(imageCnt).imageName;
+		printf("cur imageName: %s", imageName.c_str() );
+// 		imageName = "/media/yj/Data4T/data/SLAM_Dataset/EuRoc/MH_01_easy/mav0/cam0/data/1403636579913555456.png";
 		double t = imageList.at(imageCnt).imageTimeStamp;
-		cv::Mat image = cv::imread(imageName,CV_LOAD_IMAGE_GRAYSCALE);
+		cv::Mat image = cv::imread(imageName.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
 		imgCallback0(image,t);
+		
+// 		cv::imshow("image", image);
+		//按键事件，空格暂停，其他跳出循环
+		int temp = cvWaitKey(1);
+		if (temp == 32)
+			while (cvWaitKey() == -1);
 	}
 }
   
