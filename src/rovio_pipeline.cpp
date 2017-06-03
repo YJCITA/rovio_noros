@@ -25,89 +25,80 @@
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 */
-
-
 #include <memory>
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #pragma GCC diagnostic pop
-
 #include "rovio/RovioFilter.hpp"
 #include "rovio/RovioNode_noros.hpp"
 #include "rovio/Struct_definition.hpp"
 #ifdef MAKE_SCENE
-#include "rovio/RovioScene.hpp"
+	#include "rovio/RovioScene.hpp"
 #endif
 
 #ifdef ROVIO_NMAXFEATURE
-static constexpr int nMax_ = ROVIO_NMAXFEATURE;
+	static constexpr int nMax_ = ROVIO_NMAXFEATURE;
 #else
-static constexpr int nMax_ = 30; // Maximal number of considered features in the filter state.
+	static constexpr int nMax_ = 30; // Maximal number of considered features in the filter state.
 #endif
 
 #ifdef ROVIO_NLEVELS
-static constexpr int nLevels_ = ROVIO_NLEVELS;
+	static constexpr int nLevels_ = ROVIO_NLEVELS;
 #else
-static constexpr int nLevels_ = 4; // // Total number of pyramid levels considered.
+	static constexpr int nLevels_ = 4; // // Total number of pyramid levels considered.
 #endif
 
 #ifdef ROVIO_PATCHSIZE
-static constexpr int patchSize_ = ROVIO_PATCHSIZE;
+	static constexpr int patchSize_ = ROVIO_PATCHSIZE;
 #else
-static constexpr int patchSize_ = 6; // Edge length of the patches (in pixel). Must be a multiple of 2!
+	static constexpr int patchSize_ = 6; // Edge length of the patches (in pixel). Must be a multiple of 2!
 #endif
 
 #ifdef ROVIO_NCAM
-static constexpr int nCam_ = ROVIO_NCAM;
+	static constexpr int nCam_ = ROVIO_NCAM;
 #else
-static constexpr int nCam_ = 1; // Used total number of cameras.
+	static constexpr int nCam_ = 1; // Used total number of cameras.
 #endif
 
 #ifdef ROVIO_NPOSE
-static constexpr int nPose_ = ROVIO_NPOSE;
+	static constexpr int nPose_ = ROVIO_NPOSE;
 #else
-static constexpr int nPose_ = 0; // Additional pose states.
+	static constexpr int nPose_ = 0; // Additional pose states.
 #endif
 
-typedef rovio::RovioFilter<rovio::FilterState<nMax_,nLevels_,patchSize_,nCam_,nPose_>> mtFilter;
+typedef rovio::RovioFilter< rovio::FilterState<nMax_, nLevels_, patchSize_, nCam_,nPose_> > mtFilter;
 
 #ifdef MAKE_SCENE
-static rovio::RovioScene<mtFilter> mRovioScene;
+	static rovio::RovioScene<mtFilter> mRovioScene;
 
-void idleFunc(){
-  cv::waitKey(1);
-  mRovioScene.drawScene(mRovioScene.mpFilter_->safe_);
-}
+	void idleFunc(){
+		cv::waitKey(1);
+		mRovioScene.drawScene(mRovioScene.mpFilter_->safe_);
+	}
 #endif
 
-int main(int argc, char** argv){
-  std::string filter_config = "./cfg/rovio.info";
-  // Filter
-  std::shared_ptr<mtFilter> mpFilter(new mtFilter);
-  mpFilter->readFromInfo(filter_config);
+int main(int argc, char** argv)
+{
+	std::string filter_config = "./cfg/rovio.info";
+	// Filter
+	std::shared_ptr<mtFilter> mpFilter(new mtFilter);
+	mpFilter->readFromInfo(filter_config);
 
-  std::string camera_config = "./cfg/euroc_cam0.yaml";
-  mpFilter->cameraCalibrationFile_[0] = camera_config;
-  mpFilter->refreshProperties();
-  
-  rovio::RovioNode_noros<mtFilter> rovioNode(argc,argv,mpFilter);
-  
- #ifdef MAKE_SCENE
-  // Scene
-  std::string mVSFileName = "./shaders/shader.vs";
-  std::string mFSFileName = "./shaders/shader.fs";
-  mRovioScene.initScene(argc,argv,mVSFileName,mFSFileName,mpFilter);
-  mRovioScene.setIdleFunction(idleFunc);
-  //mRovioScene.addKeyboardCB('r',[&rovioNode]() mutable {rovioNode.requestReset();});
-  glutMainLoop();
+	std::string camera_config = "./cfg/euroc_cam0.yaml";
+	mpFilter->cameraCalibrationFile_[0] = camera_config;
+	mpFilter->refreshProperties();
+	rovio::RovioNode_noros<mtFilter> rovioNode(argc, argv, mpFilter);
 
-  
+#ifdef MAKE_SCENE
+	// Scene
+	std::string mVSFileName = "./shaders/shader.vs";
+	std::string mFSFileName = "./shaders/shader.fs";
+	mRovioScene.initScene(argc,argv,mVSFileName,mFSFileName,mpFilter);
+	mRovioScene.setIdleFunction(idleFunc);
+	//mRovioScene.addKeyboardCB('r',[&rovioNode]() mutable {rovioNode.requestReset();});
+	glutMainLoop();
+
 #endif
-  
-  
- 
 
-  return 0;
+	return 0;
 }

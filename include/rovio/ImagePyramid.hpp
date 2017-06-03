@@ -78,21 +78,22 @@ class ImagePyramid{
    *   @param img   - Input image (level 0).
    *   @param useCv - Set to true, if opencv (cv::pyrDown) should be used for the pyramid creation.
    */
-  void computeFromImage(const cv::Mat& img, const bool useCv = false){
-    img.copyTo(imgs_[0]);
-    centers_[0] = cv::Point2f(0,0);
-    for(int i=1; i<n_levels; ++i){
-      if(!useCv){
-        halfSample(imgs_[i-1],imgs_[i]);
-        centers_[i].x = centers_[i-1].x-pow(0.5,2-i)*(float)(imgs_[i-1].rows%2);
-        centers_[i].y = centers_[i-1].y-pow(0.5,2-i)*(float)(imgs_[i-1].cols%2);
-      } else {
-        cv::pyrDown(imgs_[i-1],imgs_[i],cv::Size(imgs_[i-1].cols/2, imgs_[i-1].rows/2));
-        centers_[i].x = centers_[i-1].x-pow(0.5,2-i)*(float)((imgs_[i-1].rows%2)+1);
-        centers_[i].y = centers_[i-1].y-pow(0.5,2-i)*(float)((imgs_[i-1].cols%2)+1);
-      }
-    }
-  }
+	void computeFromImage(const cv::Mat& img, const bool useCv = false)
+	{
+		img.copyTo(imgs_[0]);
+		centers_[0] = cv::Point2f(0,0);
+		for(int i=1; i<n_levels; ++i){
+			if(!useCv){
+				halfSample(imgs_[i-1],imgs_[i]);
+				centers_[i].x = centers_[i-1].x-pow(0.5,2-i)*(float)(imgs_[i-1].rows%2);
+				centers_[i].y = centers_[i-1].y-pow(0.5,2-i)*(float)(imgs_[i-1].cols%2);
+			} else {
+				cv::pyrDown(imgs_[i-1],imgs_[i],cv::Size(imgs_[i-1].cols/2, imgs_[i-1].rows/2));
+				centers_[i].x = centers_[i-1].x-pow(0.5,2-i)*(float)((imgs_[i-1].rows%2)+1);
+				centers_[i].y = centers_[i-1].y-pow(0.5,2-i)*(float)((imgs_[i-1].cols%2)+1);
+			}
+		}
+	}
 
   /** \brief Copies the image pyramid.
    */

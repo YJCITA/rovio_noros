@@ -72,8 +72,11 @@ class Prediction: public ModelBase<Prediction<FilterState>,typename FilterState:
       std::cout << "Warning: prediction postProcessing is not implemented!" << std::endl;
     }
   };
-  int performPrediction(mtFilterState& filterState, const mtMeas& meas, double dt){
+  
+  int performPrediction(mtFilterState& filterState, const mtMeas& meas, double dt)
+  {
     switch(filterState.mode_){
+		printf("filterState.mode_: %d\n", filterState.mode_);
       case ModeEKF:
         return performPredictionEKF(filterState,meas,dt);
       case ModeUKF:

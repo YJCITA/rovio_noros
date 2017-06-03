@@ -3,6 +3,7 @@ project(rovio)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -march=native")
 
+##################### Option #####################
 OPTION(COMPILE_DEBUG_SWITCH "switch for copmile debug OR release" OFF)
 IF (COMPILE_DEBUG_SWITCH)
     MESSAGE(STATUS "copmile debug")
@@ -11,6 +12,15 @@ IF (COMPILE_DEBUG_SWITCH)
 ELSE()
 	SET(CMAKE_BUILD_TYPE "Release")
     MESSAGE(STATUS "copmile release")
+ENDIF()
+
+OPTION(MAKE_SCENE_SWITCH "switch for MAKE_SCENE" ON)
+IF (MAKE_SCENE_SWITCH)
+    MESSAGE(STATUS "set MAKE_SCENE true")
+    set(MAKE_SCENE TRUE)
+ELSE()
+	MESSAGE(STATUS "set MAKE_SCENE false")
+	set(MAKE_SCENE FALSE)
 ENDIF()
 
 set(ROVIO_NMAXFEATURE 25 CACHE STRING "Number of features for ROVIO")
@@ -25,34 +35,54 @@ add_definitions(-DROVIO_NLEVELS=${ROVIO_NLEVELS})
 add_definitions(-DROVIO_PATCHSIZE=${ROVIO_PATCHSIZE})
 add_definitions(-DROVIO_NPOSE=${ROVIO_NPOSE})
 
-add_subdirectory(lightweight_filtering)
-
-set(MAKE_SCENE TRUE)
+add_subdirectory(./lightweight_filtering)
 #Add custom (non compiling) targets so launch scripts and python files show up in QT Creator's project view.
 file(GLOB_RECURSE EXTRA_FILES */*)
 add_custom_target(${PROJECT_NAME}_OTHER_FILES ALL WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} SOURCES ${EXTRA_FILES})
 
 
-##################### Find, include, and compile library #####################
+##################### Find package #####################
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 if(0)
 	find_package(OpenMP REQUIRED)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-
 #find_package(Eigen3 REQUIRED)
 include(/home/yj/bak/packet/eigen3/script_eigen.cmake REQUIRED)  
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 SET(OpenCV_DIR "/home/yj/bak/packet/opencv/opencv3.1/install/share/OpenCV")
-MESSAGE(STATUS "set the new opencv library address: ${OpenCV_DIR}")
+MESSAGE(STATUS "set opencv lib: ${OpenCV_DIR}")
 FIND_PACKAGE(OpenCV REQUIRED)
 
-FIND_PACKAGE(Boost COMPONENTS filesystem system thread REQUIRED)
+find_package(Boost COMPONENTS filesystem system thread REQUIRED)
 
 SET(Pangolin_DIR "/home/yj/bak/packet/Pangolin/install/lib/cmake/Pangolin")
 find_package(Pangolin REQUIRED)
+
+find_package(PkgConfig)
+
+find_package(yaml_cpp_catkin QUIET)
+if(0 AND ${yaml_cpp_catkin_FOUND})
+  message(STATUS "Found yaml_cpp_catkin, using instead of system library.")
+  set(YamlCpp_LIBRARIES ${yaml_cpp_catkin_LIBRARIES})
+  set(YamlCpp_INCLUDE_DIRS ${yaml_cpp_catkin_INCLUDE_DIRS})
+else()
+  message(STATUS "No yaml_cpp_catkin, using yaml-cpp system library instead.")
+  pkg_check_modules(YamlCpp REQUIRED yaml-cpp>=0.5)
+endif()
+
+##################### Include dirs #####################
+INCLUDE_DIRECTORIES(
+  include
+  ./lightweight_filtering/include/
+  ${EIGEN3_INCLUDE_DIR}
+  ${OpenCV_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${Pangolin_INCLUDE_DIRS}
+  ${YamlCpp_INCLUDE_DIRS}
+)
 
 if(MAKE_SCENE)
 	message(STATUS "Building ROVIO with openGL Scene Visualization")
@@ -69,39 +99,13 @@ if(MAKE_SCENE)
 	include_directories(${OpenGL_INCLUDE_DIRS})
 	link_directories(${OpenGL_LIBRARY_DIRS})
 	add_definitions(${OpenGL_DEFINITIONS})
-endif()
-
-find_package(PkgConfig)
-
-find_package(yaml_cpp_catkin QUIET)
-if(0 AND ${yaml_cpp_catkin_FOUND})
-  message(STATUS "Found yaml_cpp_catkin, using instead of system library.")
-  set(YamlCpp_LIBRARIES ${yaml_cpp_catkin_LIBRARIES})
-  set(YamlCpp_INCLUDE_DIRS ${yaml_cpp_catkin_INCLUDE_DIRS})
+	
+    add_library(${PROJECT_NAME}  src/Camera.cpp src/Struct_definition.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp src/Scene.cpp)
 else()
-  message(STATUS "No yaml_cpp_catkin, using yaml-cpp system library instead.")
-  pkg_check_modules(YamlCpp REQUIRED yaml-cpp>=0.5)
+    add_library(${PROJECT_NAME}  src/Camera.cpp src/Struct_definition.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp)
 endif()
 
-# Include dirs
-INCLUDE_DIRECTORIES(
-  include
-  ${EIGEN3_INCLUDE_DIR}
-  ${OpenCV_INCLUDE_DIRS}
-  ${Boost_INCLUDE_DIRS}
-  ${Pangolin_INCLUDE_DIRS}
-  ${YamlCpp_INCLUDE_DIRS}
-)
-
-include_directories(include )
-
-if(MAKE_SCENE)
-	#add_library(${PROJECT_NAME} src/rovio_node.cpp src/Camera.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp src/Scene.cpp)
-        add_library(${PROJECT_NAME}  src/Camera.cpp src/Struct_definition.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp src/Scene.cpp)
-else()
-	#add_library(${PROJECT_NAME} src/rovio_node.cpp src/Camera.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp)
-        add_library(${PROJECT_NAME}  src/Camera.cpp src/Struct_definition.cpp src/FeatureCoordinates.cpp src/FeatureDistance.cpp)
-endif()
+##################### Link #####################
 target_link_libraries(${PROJECT_NAME} 
 	${YamlCpp_LIBRARIES} 
 	${OpenMP_EXE_LINKER_FLAGS} 
@@ -112,8 +116,6 @@ target_link_libraries(${PROJECT_NAME}
 	${Boost_LIBRARIES}
 	${Pangolin_LIBRARIES}
 )
-
-#add_dependencies(${PROJECT_NAME}  )
 
 add_executable(rovio_pipeline src/rovio_pipeline.cpp)
 target_link_libraries(rovio_pipeline ${PROJECT_NAME})

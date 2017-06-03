@@ -66,27 +66,32 @@ class ImgInnovation: public LWF::State<LWF::VectorElement<2>>{
  *  @tparam STATE - Filter State
  */
 template<typename STATE>
-class ImgUpdateMeasAuxiliary: public LWF::AuxiliaryBase<ImgUpdateMeasAuxiliary<STATE>>{
- public:
-  ImgUpdateMeasAuxiliary(){
-    reset(0.0);
-  };
-  virtual ~ImgUpdateMeasAuxiliary(){};
-  void reset(const double t){
-    imgTime_ = t;
-    for(int i=0;i<STATE::nCam_;i++){
-      isValidPyr_[i] = false;
-    }
-  }
-  bool areAllValid(){
-    for(int i=0;i<STATE::nCam_;i++){
-      if(isValidPyr_[i] == false) return false;
-    }
-    return true;
-  }
-  ImagePyramid<STATE::nLevels_> pyr_[STATE::nCam_];
-  bool isValidPyr_[STATE::nCam_];
-  double imgTime_;
+class ImgUpdateMeasAuxiliary: public LWF::AuxiliaryBase<ImgUpdateMeasAuxiliary<STATE>>
+{
+public:
+	ImgUpdateMeasAuxiliary(){
+		reset(0.0);
+	};
+	
+	virtual ~ImgUpdateMeasAuxiliary(){};
+	
+	void reset(const double t){
+		imgTime_ = t;
+		for(int i=0;i<STATE::nCam_;i++){
+		isValidPyr_[i] = false;
+		}
+	}
+	bool areAllValid(){
+		for(int i=0;i<STATE::nCam_;i++){
+			if(isValidPyr_[i] == false) 
+				return false;
+		}
+		return true;
+	}
+	
+	ImagePyramid<STATE::nLevels_> pyr_[STATE::nCam_];
+	bool isValidPyr_[STATE::nCam_];
+	double imgTime_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
