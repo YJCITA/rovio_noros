@@ -207,7 +207,7 @@ public:
 	void imgCallback0( cv::Mat & img,double & t)
 	{
 		std::lock_guard<std::mutex> lock(m_filter_);
-		imgCallback(img,t);
+		imgCallback(img, t);
 	}
 
 	void imgCallback(cv::Mat & img, double & t)
@@ -223,13 +223,14 @@ public:
 				}
 				imgUpdateMeas_.template get<mtImgMeas::_aux>().reset(msgTime);
 			}
-			// 计算不同level
+			// 图像处理：计算不同level
 			imgUpdateMeas_.template get<mtImgMeas::_aux>().pyr_[0].computeFromImage(cv_img, true);
 			imgUpdateMeas_.template get<mtImgMeas::_aux>().isValidPyr_[0] = true;
 
 			if(imgUpdateMeas_.template get<mtImgMeas::_aux>().areAllValid()){
 				mpFilter_->template addUpdateMeas<0>(imgUpdateMeas_, msgTime);
 				imgUpdateMeas_.template get<mtImgMeas::_aux>().reset(msgTime);
+				// update
 				updateAndPublish();
 			}
 		}
@@ -247,6 +248,7 @@ public:
 			static int timing_C = 0;
 			const double oldSafeTime = mpFilter_->safe_.t_;
 			int c1 = std::get<0>(mpFilter_->updateTimelineTuple_).measMap_.size();
+			
 			// uodate的函数入口
 			double lastImageTime;
 			if(std::get<0>(mpFilter_->updateTimelineTuple_).getLastTime(lastImageTime)){
@@ -305,7 +307,7 @@ public:
 		}
 	}
 
-
+	// main loop 
 	void Loop()
 	{
 		// init 

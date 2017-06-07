@@ -122,6 +122,7 @@ public:
 				doubleRegister_.removeScalarByVar(init_.cov_(mtState::template getId<mtState::_poa>(i)+j,mtState::template getId<mtState::_poa>(i)+j));
 			}
 		}
+		
 		if(std::get<1>(mUpdates_).inertialPoseIndex_>=0){
 			std::get<1>(mUpdates_).doubleRegister_.registerVector("IrIW",init_.state_.poseLin(std::get<1>(mUpdates_).inertialPoseIndex_));
 			std::get<1>(mUpdates_).doubleRegister_.registerQuaternion("qWI",init_.state_.poseRot(std::get<1>(mUpdates_).inertialPoseIndex_));
@@ -132,6 +133,7 @@ public:
 				std::get<1>(mUpdates_).doubleRegister_.registerScalar("pre_cov_qWI",mPrediction_.prenoiP_(mtPrediction::mtNoise::template getId<mtPrediction::mtNoise::_poa>(std::get<1>(mUpdates_).inertialPoseIndex_)+j,mtPrediction::mtNoise::template getId<mtPrediction::mtNoise::_poa>(std::get<1>(mUpdates_).inertialPoseIndex_)+j));
 			}
 		}
+		
 		if(std::get<1>(mUpdates_).bodyPoseIndex_>=0){
 			std::get<1>(mUpdates_).doubleRegister_.registerVector("MrMV",init_.state_.poseLin(std::get<1>(mUpdates_).bodyPoseIndex_));
 			std::get<1>(mUpdates_).doubleRegister_.registerQuaternion("qVM",init_.state_.poseRot(std::get<1>(mUpdates_).bodyPoseIndex_));
@@ -142,6 +144,7 @@ public:
 				std::get<1>(mUpdates_).doubleRegister_.registerScalar("pre_cov_qVM",mPrediction_.prenoiP_(mtPrediction::mtNoise::template getId<mtPrediction::mtNoise::_poa>(std::get<1>(mUpdates_).bodyPoseIndex_)+j,mtPrediction::mtNoise::template getId<mtPrediction::mtNoise::_poa>(std::get<1>(mUpdates_).bodyPoseIndex_)+j));
 			}
 		}
+		
 		int ind;
 		for(int i=0;i<FILTERSTATE::mtState::nMax_;i++){
 			ind = mtState::template getId<mtState::_fea>(i);

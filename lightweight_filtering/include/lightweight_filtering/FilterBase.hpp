@@ -13,13 +13,16 @@
 
 namespace LWF{
 
+// 这个是C++中的模板..template<typename T> 这个是定义模板的固定格式,规定了的..
+// 模板应该可以理解到它的意思吧.. 比如你想求2个int float 或double型变量的值,
+// 只需要定义这么一个函数就可以了,假如不用模板的话,你就必须针对每种类型都定义一个		
 template<typename Meas>
 class MeasurementTimeline
 {
 public:
 	typedef Meas mtMeas;
-	std::map<double,mtMeas> measMap_;
-	typename std::map<double,mtMeas>::iterator itMeas_;
+	std::map<double, mtMeas> measMap_;
+	typename std::map<double, mtMeas>::iterator itMeas_; // 迭代器(iterator)
 	double maxWaitTime_;
 	double minWaitTime_;
 	
@@ -306,18 +309,23 @@ public:
 		return false;
 	}
 	
-	template<int i=0, typename std::enable_if<(i<nUpdates_)>::type* = nullptr>
+	// case: i < nUpdates_
+	template<int i=0, typename std::enable_if<( i < nUpdates_ )>::type* = nullptr>
 	void doAvailableUpdates(mtFilterState& filterState, double tNext)
 	{
 		if(std::get<i>(updateTimelineTuple_).hasMeasurementAt(tNext)){
+			
+			// KEY: performUpdate(Update.hpp ---> performUpdate(mtFilterState& filterState, const mtMeas& meas))
 			int r = std::get<i>(mUpdates_).performUpdate(filterState,std::get<i>(updateTimelineTuple_).measMap_[tNext]);
+			
 			if(r!=0) std::cout << "Error during update: " << r << std::endl;
-			logCountRegUpd_++;
+				logCountRegUpd_++;
 		}
 		doAvailableUpdates<i+1>(filterState,tNext);
 	}
 	
-	template<int i=0, typename std::enable_if<(i>=nUpdates_)>::type* = nullptr>
+	// case: i >= nUpdates_
+	template<int i=0, typename std::enable_if<( i >= nUpdates_ )>::type* = nullptr>
 	void doAvailableUpdates(mtFilterState& filterState, double tNext)
 	{
 	}

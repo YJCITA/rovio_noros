@@ -80,13 +80,13 @@ typedef rovio::RovioFilter< rovio::FilterState<nMax_, nLevels_, patchSize_, nCam
 int main(int argc, char** argv)
 {
 	std::string filter_config = "./cfg/rovio.info";
-	// Filter
+	// Filter  mtFilter = rovio::RovioFilter : public LWF::FilterBase
 	std::shared_ptr<mtFilter> mpFilter(new mtFilter);
 	mpFilter->readFromInfo(filter_config);
-
 	std::string camera_config = "./cfg/euroc_cam0.yaml";
 	mpFilter->cameraCalibrationFile_[0] = camera_config;
 	mpFilter->refreshProperties();
+	// 创建no ros node(main), 构造函数中会执行loop
 	rovio::RovioNode_noros<mtFilter> rovioNode(argc, argv, mpFilter);
 
 #ifdef MAKE_SCENE

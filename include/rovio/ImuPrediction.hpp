@@ -241,6 +241,7 @@ class ImuPrediction: public LWF::Prediction<FILTERSTATE>{
       F.template block<3,3>(mtState::template getId<mtState::_poa>(i),mtState::template getId<mtState::_poa>(i)) = M3D::Identity();
     }
   }
+  
   void jacNoise(MXD& G, const mtState& state, double dt) const{
     const V3D imuRor = meas_.template get<mtMeas::_gyr>()-state.gyb();
     const V3D dOmega = dt*imuRor;

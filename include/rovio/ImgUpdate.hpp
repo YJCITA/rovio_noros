@@ -651,7 +651,8 @@ ImgOutlierDetection<typename FILTERSTATE::mtState>,false>{
    *  @param isFinished  - True, if process has finished.
    *  @todo split into methods
    */
-  void preProcess(mtFilterState& filterState, const mtMeas& meas, bool& isFinished){
+  void preProcess(mtFilterState& filterState, const mtMeas& meas, bool& isFinished)
+  {
     if(isFinished){ // gets called if this is the first call
       commonPreProcess(filterState,meas);
       isFinished = false;
@@ -787,7 +788,8 @@ ImgOutlierDetection<typename FILTERSTATE::mtState>,false>{
    *  @param outlierDetection - Outlier detection.
    *  @param isFinished       - True, if process has finished.
    */
-  void postProcess(mtFilterState& filterState, const mtMeas& meas, const mtOutlierDetection& outlierDetection, bool& isFinished){
+  void postProcess(mtFilterState& filterState, const mtMeas& meas, const mtOutlierDetection& outlierDetection, bool& isFinished)
+  {
     int& ID = filterState.state_.aux().activeFeature_;  // Get the ID of the updated feature.
     int& activeCamCounter = filterState.state_.aux().activeCameraCounter_;
 

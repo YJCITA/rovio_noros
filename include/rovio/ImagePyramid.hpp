@@ -114,7 +114,8 @@ class ImagePyramid{
    * @param l2         - Output pyramid level.
    * @return the corresponding pixel coordinates on pyramid level l2.
    */
-  void levelTranformCoordinates(const FeatureCoordinates& cIn,FeatureCoordinates& cOut,const int l1, const int l2) const{
+  void levelTranformCoordinates(const FeatureCoordinates& cIn, FeatureCoordinates& cOut, const int l1, const int l2) const
+  {
     assert(l1<n_levels && l2<n_levels && l1>=0 && l2>=0);
     cOut.set_c((centers_[l1]-centers_[l2])*pow(0.5,l2)+cIn.get_c()*pow(0.5,l2-l1));
     if(cIn.mpCamera_ != nullptr){
@@ -133,7 +134,8 @@ class ImagePyramid{
    * @param detectionThreshold - Detection threshold of the used cv::FastFeatureDetector.
    *                             See http://docs.opencv.org/trunk/df/d74/classcv_1_1FastFeatureDetector.html
    */
-  void detectFastCorners(std::vector<FeatureCoordinates>& candidates, int l, int detectionThreshold) const{
+  void detectFastCorners(std::vector<FeatureCoordinates>& candidates, int l, int detectionThreshold) const
+  {
     std::vector<cv::KeyPoint> keypoints;
 #if (CV_MAJOR_VERSION < 3)
     cv::FastFeatureDetector feature_detector_fast(detectionThreshold, true);

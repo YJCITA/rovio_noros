@@ -178,11 +178,15 @@ class Update: public ModelBase<Update<Innovation,FilterState,Meas,Noise,OutlierD
       std::cout << "Warning: update postProcessing is not implemented!" << std::endl;
     }
   }
-  int performUpdate(mtFilterState& filterState, const mtMeas& meas){
+  
+  // KEY
+  int performUpdate(mtFilterState& filterState, const mtMeas& meas)
+  {
     bool isFinished = true;
     int r = 0;
     do {
-      preProcess(filterState,meas,isFinished);
+		// ImgUpdate.hpp-->preProcess
+      preProcess(filterState, meas, isFinished);
       if(!isFinished){
         switch(filterState.mode_){
           case ModeEKF:
@@ -199,13 +203,16 @@ class Update: public ModelBase<Update<Innovation,FilterState,Meas,Noise,OutlierD
             break;
         }
       }
-      postProcess(filterState,meas,outlierDetection_,isFinished);
+      
+      postProcess(filterState, meas, outlierDetection_, isFinished);
       filterState.state_.fix();
       enforceSymmetry(filterState.cov_);
     } while (!isFinished);
     return r;
   }
-  int performUpdateEKF(mtFilterState& filterState, const mtMeas& meas){
+  
+  int performUpdateEKF(mtFilterState& filterState, const mtMeas& meas)
+  {
     meas_ = meas;
     if(!useSpecialLinearizationPoint_){
       this->jacState(H_,filterState.state_);
@@ -254,6 +261,8 @@ class Update: public ModelBase<Update<Innovation,FilterState,Meas,Noise,OutlierD
     filterState.state_.boxPlus(updateVec_,filterState.state_);
     return 0;
   }
+  
+  
   int performUpdateIEKF(mtFilterState& filterState, const mtMeas& meas){
     meas_ = meas;
     successfulUpdate_ = false;

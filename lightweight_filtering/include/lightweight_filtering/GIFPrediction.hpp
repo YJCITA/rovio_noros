@@ -89,9 +89,10 @@ class GIFPrediction: public ModelBase<GIFPrediction<FilterState,Innovation,Meas,
   virtual void jacCurrentState(Eigen::MatrixXd& F, const mtState& previousState, const mtState& currentState, double dt) const = 0;
   virtual void jacNoise(Eigen::MatrixXd& F, const mtState& previousState, const mtState& currentState, double dt) const = 0;
   virtual void noMeasCase(mtFilterState& filterState, mtMeas& meas, double dt){};
+  
   virtual void preProcess(mtFilterState& filterState, const mtMeas& meas, double dt){
     if(!disablePreAndPostProcessingWarning_){
-      std::cout << "Warning: preProcessing is not implement!" << std::endl;
+		std::cout << "Warning: preProcessing is not implement!" << std::endl;
     }
   };
   

@@ -124,56 +124,72 @@ class Prediction: public ModelBase<Prediction<FilterState>,typename FilterState:
     postProcess(filterState,meas,dt);
     return 0;
   }
-  int predictMerged(mtFilterState& filterState, double tTarget, const std::map<double,mtMeas>& measMap){
-    switch(filterState.mode_){
-      case ModeEKF:
-        return predictMergedEKF(filterState,tTarget,measMap);
-      case ModeUKF:
-        return predictMergedUKF(filterState,tTarget,measMap);
-      case ModeIEKF:
-        return predictMergedEKF(filterState,tTarget,measMap);
-      default:
-        return predictMergedEKF(filterState,tTarget,measMap);
-    }
-  }
-  virtual int predictMergedEKF(mtFilterState& filterState, const double tTarget, const std::map<double,mtMeas>& measMap){
-    const typename std::map<double,mtMeas>::const_iterator itMeasStart = measMap.upper_bound(filterState.t_);
-    if(itMeasStart == measMap.end()) return 0;
-    typename std::map<double,mtMeas>::const_iterator itMeasEnd = measMap.lower_bound(tTarget);
-    if(itMeasEnd != measMap.end()) ++itMeasEnd;
-    double dT = std::min(std::prev(itMeasEnd)->first,tTarget)-filterState.t_;
-    if(dT <= 0) return 0;
+  
+  // default predict -YJ-
+	int predictMerged(mtFilterState& filterState, double tTarget, const std::map<double,mtMeas>& measMap)
+	{
+		switch(filterState.mode_){
+			case ModeEKF:
+				return predictMergedEKF(filterState,tTarget,measMap);  // 当前配置默认执行
+			case ModeUKF:
+				return predictMergedUKF(filterState,tTarget,measMap);
+			case ModeIEKF:
+				return predictMergedEKF(filterState,tTarget,measMap);
+			default:
+				return predictMergedEKF(filterState,tTarget,measMap);
+	}
+	}
+  
+  // 默认执行的KF
+  virtual int predictMergedEKF(mtFilterState& filterState, const double tTarget, const std::map<double,mtMeas>& measMap)
+  {
+	const typename std::map<double,mtMeas>::const_iterator itMeasStart = measMap.upper_bound(filterState.t_);
+	if(itMeasStart == measMap.end()) 
+		return 0;
+	
+	typename std::map<double,mtMeas>::const_iterator itMeasEnd = measMap.lower_bound(tTarget);
+	if(itMeasEnd != measMap.end()) 
+		++itMeasEnd;
+	
+	double dT = std::min(std::prev(itMeasEnd)->first,tTarget) - filterState.t_;
+	if(dT <= 0) 
+		return 0;
 
-    // Compute mean Measurement
-    mtMeas meanMeas;
-    typename mtMeas::mtDifVec vec;
-    typename mtMeas::mtDifVec difVec;
-    vec.setZero();
-    double t = itMeasStart->first;
-    for(typename std::map<double,mtMeas>::const_iterator itMeas=next(itMeasStart);itMeas!=itMeasEnd;itMeas++){
-      itMeasStart->second.boxMinus(itMeas->second,difVec);
-      vec = vec + difVec*(std::min(itMeas->first,tTarget)-t);
-      t = std::min(itMeas->first,tTarget);
-    }
-    vec = vec/dT;
-    itMeasStart->second.boxPlus(vec,meanMeas);
-
-    preProcess(filterState,meanMeas,dT);
-    meas_ = meanMeas;
-    this->jacPreviousState(filterState.F_,filterState.state_,dT);
-    this->jacNoise(filterState.G_,filterState.state_,dT); // Works for time continuous parametrization of noise
-    for(typename std::map<double,mtMeas>::const_iterator itMeas=itMeasStart;itMeas!=itMeasEnd;itMeas++){
-      meas_ = itMeas->second;
-      this->evalPredictionShort(filterState.state_,filterState.state_,std::min(itMeas->first,tTarget)-filterState.t_);
-      filterState.t_ = std::min(itMeas->first,tTarget);
-    }
-    filterState.cov_ = filterState.F_*filterState.cov_*filterState.F_.transpose() + filterState.G_*prenoiP_*filterState.G_.transpose();
-    filterState.state_.fix();
-    enforceSymmetry(filterState.cov_);
-    filterState.t_ = std::min(std::prev(itMeasEnd)->first,tTarget);
-    postProcess(filterState,meanMeas,dT);
-    return 0;
+	// Compute mean Measurement
+	mtMeas meanMeas;
+	typename mtMeas::mtDifVec vec;
+	typename mtMeas::mtDifVec difVec;
+	vec.setZero();
+	double t = itMeasStart->first;
+	for(typename std::map<double,mtMeas>::const_iterator itMeas = next(itMeasStart); itMeas!=itMeasEnd; itMeas++){
+		itMeasStart->second.boxMinus(itMeas->second, difVec);
+		vec = vec + difVec*(std::min(itMeas->first,tTarget)-t);
+		t = std::min(itMeas->first,tTarget);
+	}
+	vec = vec/dT;
+	itMeasStart->second.boxPlus(vec, meanMeas);
+	// ??? -YJ-
+	preProcess(filterState, meanMeas, dT);
+	
+	meas_ = meanMeas;
+	this->jacPreviousState(filterState.F_, filterState.state_, dT);
+	this->jacNoise(filterState.G_, filterState.state_, dT); // Works for time continuous parametrization of noise
+	
+	for(typename std::map<double,mtMeas>::const_iterator itMeas=itMeasStart;itMeas!=itMeasEnd;itMeas++){
+		meas_ = itMeas->second;
+		this->evalPredictionShort(filterState.state_,filterState.state_,std::min(itMeas->first,tTarget)-filterState.t_);
+		filterState.t_ = std::min(itMeas->first,tTarget);
+	}
+	filterState.cov_ = filterState.F_*filterState.cov_*filterState.F_.transpose() + filterState.G_*prenoiP_*filterState.G_.transpose();
+	filterState.state_.fix();
+	enforceSymmetry(filterState.cov_);
+	
+	filterState.t_ = std::min(std::prev(itMeasEnd)->first,tTarget);
+	postProcess(filterState, meanMeas, dT);
+	
+	return 0;
   }
+  
   virtual int predictMergedUKF(mtFilterState& filterState, double tTarget, const std::map<double,mtMeas>& measMap){
     filterState.refreshNoiseSigmaPoints(prenoiP_);
     const typename std::map<double,mtMeas>::const_iterator itMeasStart = measMap.upper_bound(filterState.t_);
